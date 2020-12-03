@@ -1,0 +1,193 @@
+SCRAPPPPEEEEEEEE
+
+## you will scrape the following information from http://quotes.toscrape.com/
+    refer to class activity for reference - 12.2.7
+- quote text -
+
+WHO WANTS TO DO IT? MARA/SARON
+quotes = soup.find_all('span', class_='text')
+author = soup.find_all('small', class_='author')
+
+for x in range(1, 11):
+
+    html = browser.html
+    soup = BeautifulSoup(html, 'html.parser')
+
+
+    quote_box = soup.find_all('div', class_='quotes')
+
+    for div in divs:
+    - tags
+    - Author name
+       find quotes 
+       find author
+       find tags per quote
+   
+- Author Details
+    -click about for author details
+      - born
+        -span class = author-born-date
+        -span class = author-born-location
+    - description
+        -div class= author-description 
+  
+
+## Store the collected information into MongoDB( you can use Mongo atlas for this)
+
+    Jupyter notebook - 12.3.9 - INS scrape & render
+        -scrape_craigslist.py **shows the scraping but not the scab
+        -app.py **mongo db & flask code
+
+
+## Design the following three tables, Extract the data from mongoDB and load it into postgres
+    -Use Slack link to book twin jupyter notebook - saved in repository for reference
+
+WHO WANTS TO DO THIS? SHIRLEY/LISA    
+
+    - one table for quotes, this table can have the quote and author
+        -make schemas
+        -insert data into postgres
+
+    - one table for author information
+        -make schemas
+        -insert data into postgres
+
+    - one table to store quote and tag relation
+        -make schemas
+        -insert data into postgres
+
+## Create a FLASK API with the following endpoints
+SUMIT / LIZ / SHIRLEY / LISA / SARON
+
+
+
+<details>
+    <summary><strong>/quotes </strong></summary>
+
+```
+{
+    total: <total number quotes scraped >,
+    quotes : [
+                {
+                    text: <quote text >,
+                    author name: <author name >,
+                    tags: []
+                },
+	            ...
+	        ]
+}
+
+```
+
+</details>
+
+<details>
+    <summary><strong>/authors </strong></summary>
+
+```
+{
+    total: <total number of authors>,
+    details:[
+            	{
+            		name : <author name >,
+            		description : <author description>,
+            		born : <date of birth etc. >,
+            		count : <total number of quotes by this author >,
+            		quotes : [
+                				{
+                    				text: <quote text>,
+                    				tags: []
+                				},
+            		...
+            		]
+            	},
+        	...
+    	]
+}
+```
+
+</details>
+
+<details>
+    <summary><strong>/authors/< author name > </strong></summary>
+
+```
+{
+    name: <Author name>,
+    description: <author description>,
+    born: <date of birth etc>
+    number_of_quotes :  <total quotes by the author>
+    quotes : [
+    		{
+    			text: <quote text>,
+    			tags: []
+    		},
+            ...
+    	]
+}
+```
+
+</details>
+
+<details>
+    <summary><strong>/tags </strong></summary>
+
+```
+{
+	count: <total tags>,
+	details:[
+        		{
+        			name: < tag>,
+        			number_of_quotes :  <total quotes this tag appears in >
+        			quotes : [
+                				{
+                					text: <quote text>,
+                					tags: []
+                				},
+                                ...
+    				        ]
+        		},
+            ...
+	]
+}
+
+```
+
+</details>
+
+<details>	
+    <summary><strong>/tags/< tag > </strong></summary>
+
+```
+{
+	tag : <tag name>,
+	count : <number of quotes this tag appears in >,
+	quotes : [
+			{
+    			quote : <quote text >,
+    			tags : []
+			},
+		...
+		]
+
+}
+
+```
+
+</details>
+
+<details>
+   <summary><strong>/top10tags </strong></summary>
+
+```
+	[
+		{
+		tag: < tag name > ,
+		quote count: < number of quotes this tag appears in >
+		},
+		...
+	]
+
+```
+
+</details>
