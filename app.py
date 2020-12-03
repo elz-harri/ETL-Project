@@ -44,31 +44,72 @@ def welcome():
 
 @app.route("/api/v1.0/quotes")
 def quotes():
+#   { total: <total number quotes scraped >,
+#     quotes : [{ text: <quote text >,
+#                 author name: <author name >,
+#                 tags: []},
+# 	            ...]}
+
     return
 
 
 @app.route("/api/v1.0/authors")
 def authors():
+#     {total: <total number of authors>,
+#      details:[{ name : <author name >,
+#             	  description : <author description>,
+#             	  born : <date of birth etc. >,
+#             	  count : <total number of quotes by this author >,
+#             	  quotes : [{ text: <quote text>,
+#                     		  tags: []}, 
+#                 ...]
+#             	},
+#      	...]
+#      }
+
     return
 
 
 @app.route("/api/v1.0/authors/<author_name>")
 def authorsname(author_name):
+#     {name: <Author name>,
+#      description: <author description>,
+#      born: <date of birth etc>
+#      number_of_quotes :  <total quotes by the author>
+#      quotes : [{ text: <quote text>,
+#     			   tags: []},
+#                ...]
+#      }
     return
 
 
 @app.route("/api/v1.0/tags")
 def tags():
+#     { count: <total tags>,
+# 	    details:[{ name: < tag>,
+#         		   number_of_quotes :  <total quotes this tag appears in >,
+#         		   quotes : [{ text: <quote text>, tags: []}, ... ]},
+#                  ...]
+#      }
     return
 
 
 @app.route("/api/v1.0/tags/<tag>")
 def tag(tag):
+#     { tag : <tag name>,
+# 	    count : <number of quotes this tag appears in >,
+# 	    quotes : [{ quote : <quote text >, tags : []}, ...	]
+#      }
     return
 
 
 @app.route("/api/v1.0/top10tags")
 def top10tags():
+#		{ tag: <tag name> ,
+#		quote count: < number of quotes this tag appears in >
+#		},
+#		...
+
     return
 
 
