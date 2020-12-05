@@ -10,17 +10,20 @@ from sqlalchemy import create_engine, func
 from flask import Flask, jsonify
 
 
-#setup engine from hawaii sqlite in resources folder
-#engine = create_engine("sqlite:///Resources/hawaii.sqlite")
+#setup engine for postgres dialect+driver://username:password@host:port/database
+connection_string ='postgres://lohpprsybclozn:74f7430754ab578b43b5c46f7acf3dbe200492f88ba0b036850f970eac0b1f46@ec2-54-85-13-135.compute-1.amazonaws.com:5432/da547o0397662v'
+engine = create_engine(f'{connection_string}')
+
 
 #reflect using automap base
 Base = automap_base()
 #table reflect
 Base.prepare(engine, reflect=True)
 
-#reference the two tables in Base
-#Measurement = Base.classes.measurement
-#Station = Base.classes.station
+#reference the tables in scrape_db
+author = Base.classes.author
+tag = Base.classes.tags
+qoutes = Base.classes.quotes
 
 
 #setup flask app
