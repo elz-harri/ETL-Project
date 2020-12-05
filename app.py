@@ -77,7 +77,7 @@ def authors():
     #result_details = engine.execute('''select name, born, birthplace, description
     #from author''')
     
-    result_details = engine.execute('''select a.name, a.born, a.birtplace,a.description, count(q.author_name) from author a inner join quotes q on q.author_name = a.name
+    result_details = engine.execute('''select a.name, a.born, a.birthplace, a.description, count(q.author_name) from author a inner join quotes q on q.author_name = a.name
 group by a.name''')
     total_authors = result_details.rowcount
     authors = []
@@ -88,14 +88,16 @@ group by a.name''')
         author['birthplace'] = row.birthplace
         author['description'] = row.description
         #needs to be edited
-        author['count'] = row.count(q.author_name)
-        #WE NEED TO ADD THE AUTHOR QUOTE COUNT!!!!!!!!!!!!!!!!!!!!!!!!!!!! TO OUR AUTHOR TABLE
+        author['count'] = row.count
+        #author count works - need to add quotes to each author
         #MARA PLEASE HELP
-        # tags_result = engine.execute(
-        #     f'select tag  from tags where quote_id= {row.id}')
-        # for tagrow in tags_result:
-        #     tags.append(tagrow.tag)
-        # quote['tags'] = tags
+       
+        # quote_result = engine.execute(f'select quote_text from quotes where author_name= {row.name}')
+        # for row in quote_result:
+        #     quote = []
+        #     quote.append(row.quote_text)
+        #     # quote['tags'] = tags
+        # author['quotes'] = quote
         authors.append(author)
     result['total'] = total_authors    
     result['author'] = authors
