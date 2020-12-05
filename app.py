@@ -20,10 +20,10 @@ Base = automap_base()
 #table reflect
 Base.prepare(engine, reflect=True)
 
-#reference the tables in scrape_db
+#reference the tables in heroku
 author = Base.classes.author
-tag = Base.classes.tags
-qoutes = Base.classes.quotes
+# tag = Base.classes.tags
+quotes = Base.classes.quotes
 
 
 #setup flask app
@@ -46,14 +46,22 @@ def welcome():
 
 
 @app.route("/api/v1.0/quotes")
-def quotes():
+def quotes(engine):
+   
+    session = Session(engine)
+    #  = session.query(quotes).count()
+    quotes = session.query(quotes.quote_text)
+       
+    session.close()
+    # return jsonify(quotes=quotes)
+
 #   { total: <total number quotes scraped >,
 #     quotes : [{ text: <quote text >,
 #                 author name: <author name >,
 #                 tags: []},
 # 	            ...]}
-
-    return
+    return  'you found us'
+    
 
 
 @app.route("/api/v1.0/authors")
