@@ -9,121 +9,63 @@ from sqlalchemy import create_engine, func
 
 from flask import Flask, jsonify
 
-
-#setup engine for postgres dialect+driver://username:password@host:port/database
-connection_string ='postgres://lohpprsybclozn:74f7430754ab578b43b5c46f7acf3dbe200492f88ba0b036850f970eac0b1f46@ec2-54-85-13-135.compute-1.amazonaws.com:5432/da547o0397662v'
+connection_string ='postgres://yonxayzwttwqcf:7b11f9fcfe67b6ad7f2ca38fa2a5cf7e521e5757f44fdd3bd90b9f386e696a2e@ec2-54-85-13-135.compute-1.amazonaws.com:5432/dbne19n4g8dtss'
 engine = create_engine(f'{connection_string}')
 
-
 #reflect using automap base
-Base = automap_base()
-#table reflect
-Base.prepare(engine, reflect=True)
+# Base = automap_base()
+# #table reflect
+# Base.prepare(engine, reflect=True)
+# Base.classes.keys()
 
-#reference the tables in heroku
-author = Base.classes.author
-# tag = Base.classes.tags
-quotes = Base.classes.quotes
+# #reference the tables in heroku
+# Author_info = Base.classes.author
+# Tags = Base.classes.tags
+# Quotes = Base.classes.quotes
 
 
 #setup flask app
 app = Flask(__name__)
 
-
-# Flask Routes and welcome text
 @app.route("/")
 def welcome():
     return (
         f"Welcome to the Quotes Scraper App<br/>"
         f"The List of Available Routes Are:<br/>"
-        f"/api/v1.0/quotes<br/>"
-        f"/api/v1.0/authors<br/>"
-        f"/api/v1.0/authors/author_name<br/>"
-        f"/api/v1.0/tags<br/>"
-        f"/api/v1.0/tags/<tag><br/>"
-        f"/api/v1.0/top10tags<br/>"
+        f"/quotes<br/>"
+        f"/authors<br/>"
+        f"/authors/author_name<br/>"
+        f"/tags<br/>"
+        f"/tags/<tag><br/>"
+        f"/top10tags<br/>"
     )
 
 
-@app.route("/api/v1.0/quotes")
-def quotes(engine):
-   
-    session = Session(engine)
-    #  = session.query(quotes).count()
-    quotes = session.query(quotes.quote_text)
-       
-    session.close()
-    # return jsonify(quotes=quotes)
-
-#   { total: <total number quotes scraped >,
-#     quotes : [{ text: <quote text >,
-#                 author name: <author name >,
-#                 tags: []},
-# 	            ...]}
-    return  'you found us'
-    
 
 
-@app.route("/api/v1.0/authors")
-def authors():
-#     {total: <total number of authors>,
-#      details:[{ name : <author name >,
-#             	  description : <author description>,
-#             	  born : <date of birth etc. >,
-#             	  count : <total number of quotes by this author >,
-#             	  quotes : [{ text: <quote text>,
-#                     		  tags: []}, 
-#                 ...]
-#             	},
-#      	...]
-#      }
-
-    return
-
-
-@app.route("/api/v1.0/authors/<author_name>")
-def authorsname(author_name):
-#     {name: <Author name>,
-#      description: <author description>,
-#      born: <date of birth etc>
-#      number_of_quotes :  <total quotes by the author>
-#      quotes : [{ text: <quote text>,
-#     			   tags: []},
-#                ...]
-#      }
-    return
+@app.route("/quotes")
+def quotes():
+    result = {}
+    result_set = engine.execute('''select id, author_name, quote_text
+    from quotes q inner join author a on q.author_name = a.name
+    order by id''')
+    total_quotes = result_set.rowcount
+    quotes = []
+    for row in result_set:
+        quote = {}
+        quote['text'] = row.quote_text
+        quote['author'] = row.author_name
+        tags = []
+        tags_result = engine.execute(
+            f'select tag  from tags where quote_id= {row.id}')
+        for tagrow in tags_result:
+            tags.append(tagrow.tag)
+        quote['tags'] = tags
+        quotes.append(quote)
+    result['quotes'] = quotes
+    result['total'] = total_quotes
+    return jsonify(result)
 
 
-@app.route("/api/v1.0/tags")
-def tags():
-#     { count: <total tags>,
-# 	    details:[{ name: < tag>,
-#         		   number_of_quotes :  <total quotes this tag appears in >,
-#         		   quotes : [{ text: <quote text>, tags: []}, ... ]},
-#                  ...]
-#      }
-    return
-
-
-@app.route("/api/v1.0/tags/<tag>")
-def tag(tag):
-#     { tag : <tag name>,
-# 	    count : <number of quotes this tag appears in >,
-# 	    quotes : [{ quote : <quote text >, tags : []}, ...	]
-#      }
-    return
-
-
-@app.route("/api/v1.0/top10tags")
-def top10tags():
-#		{ tag: <tag name> ,
-#		quote count: < number of quotes this tag appears in >
-#		},
-#		...
-
-    return
-
-
-#run app
 if __name__ == '__main__':
     app.run()
