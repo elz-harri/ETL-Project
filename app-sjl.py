@@ -1,3 +1,4 @@
+#import necessary modules
 import numpy as np
 import datetime as dt
 import pandas as pd
@@ -6,42 +7,17 @@ import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
-from sqlalchemy.engine.result import ResultMetaData, RowProxy
-from sqlalchemy.engine.interfaces import Dialect, ExecutionContext
-from sqlalchemy.sql import ClauseElement
-from sqlalchemy.types import TypeEngine
+from sqlalchemy.sql import text
+
 from flask import Flask, jsonify
 
 connection_string ='postgres://yonxayzwttwqcf:7b11f9fcfe67b6ad7f2ca38fa2a5cf7e521e5757f44fdd3bd90b9f386e696a2e@ec2-54-85-13-135.compute-1.amazonaws.com:5432/dbne19n4g8dtss'
 engine = create_engine(f'{connection_string}')
 
-<<<<<<< HEAD:app-sjl.py
-
-# #reflect using automap base
-# Base = automap_base()
-# #table reflect
-# Base.prepare(engine, reflect=True)
-
-# #reference the tables in heroku
-# author = Base.classes.author
-# # tag = Base.classes.tags
-# quotes = Base.classes.quotes
-=======
-#reflect using automap base
-# Base = automap_base()
-# #table reflect
-# Base.prepare(engine, reflect=True)
-# Base.classes.keys()
-
-# #reference the tables in heroku
-# Author_info = Base.classes.author
-# Tags = Base.classes.tags
-# Quotes = Base.classes.quotes
->>>>>>> 36598f9ff6b15a4cf42cfeef81987757c91709ed:app.py
-
-
 #setup flask app
 app = Flask(__name__)
+
+
 
 @app.route("/")
 def welcome():
@@ -57,11 +33,12 @@ def welcome():
     )
 
 
-<<<<<<< HEAD:app-sjl.py
 @app.route("/quotes")
 def quotes():
     result = {}
-    result_set = engine.execute('''select id, author_name, text
+    #creating a sql query to retrieve the data
+    # we will engine.execute instead of using SQLalchemy session
+    result_set = engine.execute('''select id, author_name, quote_text
     from quotes q inner join author a on q.author_name = a.name
     order by id''')
     total_quotes = result_set.rowcount
@@ -81,15 +58,7 @@ def quotes():
     result['total'] = total_quotes
     return jsonify(result)
 
-#   { total: <total number quotes scraped >,
-#     quotes : [{ text: <quote text >,
-#                 author name: <author name >,
-#                 tags: []},
-# 	            ...]}
-    return  'you found us'
-    
-
-
+#second route 
 @app.route("/authors")
 def authors():
 #     {total: <total number of authors>,
@@ -104,73 +73,52 @@ def authors():
 #      	...]
 #      }
 
-    return
+    result = {}
+    #creating a sql query to retrieve the data
+    #result_details = engine.execute('''select name, born, birthplace, description
+    #from author''')
+    
+    result_details = engine.execute('''select a.name, a.born, a.birthplace, a.description, count(q.author_name) from author a inner join quotes q on q.author_name = a.name
+group by a.name''')
+    total_authors = result_details.rowcount
+    authors = []
+    for row in result_details:
+        author = {}
+        author['name'] = row.name
+        author['born'] = row.born
+        author['birthplace'] = row.birthplace
+        author['description'] = row.description
+        #needs to be edited
+        author['count'] = row.count
+        # sel = text(f"select quote_text from quotes where author_name like '%{row.name}'")
+        # quote_result = engine.execute(sel).fetchall()
+        # quote_result = engine.execute(f"select quote_text from quotes where author_name like '\%%{row.name}\%%'")
+        query = text("select * from quotes where author_name = :name")
+        quotes_result = engine.execute(query, {'name': row.name})
+        author_quotes=[]
+            for row in quotes_result:            
+            author_quotes.append(row.quote_text)
+            #  quote['tags'] = tags
+        author['quotes'] = (author_quotes)
+        authors.append(author)
+    result['total'] = total_authors    
+    result['author'] = authors
+    
+    return jsonify(result)
 
-
-@app.route("/<author_name>")
-def authorsname(author_name):
-#     {name: <Author name>,
-#      description: <author description>,
-#      born: <date of birth etc>
-#      number_of_quotes :  <total quotes by the author>
-#      quotes : [{ text: <quote text>,
-#     			   tags: []},
-#                ...]
-#      }
-    return
-
-
-@app.route("/tags")
-def tags():
-#     { count: <total tags>,
-# 	    details:[{ name: < tag>,
-#         		   number_of_quotes :  <total quotes this tag appears in >,
-#         		   quotes : [{ text: <quote text>, tags: []}, ... ]},
-#                  ...]
-#      }
-    return
-
-
-@app.route("/<tag>")
-def tag(tag):
-#     { tag : <tag name>,
-# 	    count : <number of quotes this tag appears in >,
-# 	    quotes : [{ quote : <quote text >, tags : []}, ...	]
-#      }
-    return
-
-
+#Arun provided coded for top10 tags:
 @app.route("/top10tags")
 def top10tags():
-#		{ tag: <tag name> ,
-#		quote count: < number of quotes this tag appears in >
-#		},
-#		...
-=======
-
->>>>>>> 36598f9ff6b15a4cf42cfeef81987757c91709ed:app.py
-
-@app.route("/quotes")
-def quotes():
-    result = {}
-    result_set = engine.execute('''select id, author_name, quote_text
-    from quotes q inner join author a on q.author_name = a.name
-    order by id''')
-    total_quotes = result_set.rowcount
-    quotes = []
-    for row in result_set:
-        quote = {}
-        quote['text'] = row.quote_text
-        quote['author'] = row.author_name
-        tags = []
-        tags_result = engine.execute(
-            f'select tag  from tags where quote_id= {row.id}')
-        for tagrow in tags_result:
-            tags.append(tagrow.tag)
-        quote['tags'] = tags
-        quotes.append(quote)
-    result['quotes'] = quotes
-    result['total'] = total_quotes
+    result = []
+    tags_result_set = engine.execute('''select tag , count(*) as total from tags
+    group by tag
+    order by total desc
+    limit 10''')
+    for row in tags_result_set:
+        tag = {}
+        tag['tag'] = row.tag
+        tag['total'] = row.total
+        result.append(tag)
     return jsonify(result)
 
 

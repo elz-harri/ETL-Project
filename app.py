@@ -7,6 +7,7 @@ import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
+from sqlalchemy.sql import text
 
 from flask import Flask, jsonify
 
@@ -89,19 +90,19 @@ group by a.name''')
         author['description'] = row.description
         #needs to be edited
         author['count'] = row.count
-        #author count works - need to add quotes to each author
-        #MARA PLEASE HELP
-       
-        # quote_result = engine.execute(f'select quote_text from quotes where author_name= {row.name}')
-        # for row in quote_result:
-        #     quote = []
-        #     quote.append(row.quote_text)
-        #     # quote['tags'] = tags
-        # author['quotes'] = quote
+        # sel = text(f"select quote_text from quotes where author_name like '%{row.name}'")
+        # quote_result = engine.execute(sel).fetchall()
+        # quote_result = engine.execute(f"select quote_text from quotes where author_name like '\%%{row.name}\%%'")
+        query = text("select * from quotes where author_name = :name")
+        quotes_result = engine.execute(query, {'name': row.name})
+        author_quotes=[]
+            for row in quotes_result:            
+            author_quotes.append(row.quote_text)
+            #  quote['tags'] = tags
+        author['quotes'] = (author_quotes)
         authors.append(author)
     result['total'] = total_authors    
     result['author'] = authors
-
     
     return jsonify(result)
 
@@ -119,7 +120,6 @@ def top10tags():
         tag['total'] = row.total
         result.append(tag)
     return jsonify(result)
-
 
 
 if __name__ == '__main__':
