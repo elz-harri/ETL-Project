@@ -44,7 +44,7 @@ def tags_for_the_quote(quote_id):
 def quotes_for_author(author_name):
     result = []
     print(f'getting quotes for {author_name}')
-    query = text("select id , quote_text from quotes where author_name = :name")
+    query = text("select id , quote_text from quotes where author_name ~* :name")
     quotes_result_set = engine.execute(query, {'name': author_name})
     for row in quotes_result_set:
         this_quote = {}
@@ -62,7 +62,7 @@ def quotes_for_tag(tag):
 
     query = text('''select q.id, q.quote_text
             from quotes q inner join tags t on q.id=t.quote_id
-            where t.tag = :tag ''')
+            where t.tag ~* :tag ''')
     quotes_result_set = engine.execute(query, {'tag': tag})
     for row in quotes_result_set:
         this_quote = {}
@@ -130,7 +130,7 @@ group by a.name''')
         # sel = text(f"select quote_text from quotes where author_name like '%{row.name}'")
         # quote_result = engine.execute(sel).fetchall()
         # quote_result = engine.execute(f"select quote_text from quotes where author_name like '\%%{row.name}\%%'")
-        query = text("select * from quotes where author_name = :name")
+        query = text("select * from quotes where author_name ~* :name")
         quotes_result = engine.execute(query, {'name': row.name})
         author_quotes=[]
         for row in quotes_result:            
@@ -148,7 +148,7 @@ group by a.name''')
 def oneauthor(author_name):
     result = {}
     query = text(
-        "select name , born , description from author where name = :name")
+        "select name , born , description from author where name ~* :name")
     author_result = engine.execute(query, {'name': author_name})
     # if we found the author, return the details, otherwise return Author not found
     if(author_result.rowcount == 1):
