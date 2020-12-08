@@ -3,6 +3,7 @@ ETL Mini-Project
 
 1. Final-WebScrapping.ipynb
         Jupyter notebook contains the code for the following tasks:
+
             - Webscrapping for : 'http://quotes.toscrape.com/'
 
             - Imported Splinter, pymongo, pandas, requests
@@ -26,9 +27,9 @@ ETL Mini-Project
 
                 NAVIGATE TO THESE API:
 
-                *"/authors"*
-                
-                *"/quotes"*
+                **"/authors"**
+
+                **"/quotes"**
 
             
 
