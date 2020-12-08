@@ -17,8 +17,6 @@ engine = create_engine(f'{connection_string}')
 #setup flask app
 app = Flask(__name__)
 
-
-
 @app.route("/")
 def welcome():
     return (
@@ -26,12 +24,54 @@ def welcome():
         f"The List of Available Routes Are:<br/>"
         f"/quotes<br/>"
         f"/authors<br/>"
-        f"/authors/author_name<br/>"
+        f"/authors/&ltauthor_name&gt<br/>"
         f"/tags<br/>"
         f"/tags/<tag><br/>"
         f"/top10tags<br/>"
     )
 
+#################################################
+def tags_for_the_quote(quote_id):
+    tags = []
+    print(f'getting tags for {quote_id}')
+    tags_result = engine.execute(
+        f'select tag  from tags where quote_id= {quote_id}')
+    for tagrow in tags_result:
+        tags.append(tagrow.tag)
+    return tags
+#################################################
+
+def quotes_for_author(author_name):
+    result = []
+    print(f'getting quotes for {author_name}')
+    query = text("select id , quote_text from quotes where author_name ~* :name")
+    quotes_result_set = engine.execute(query, {'name': author_name})
+    for row in quotes_result_set:
+        this_quote = {}
+        this_quote['text'] = row.quote_text
+        # call tags funtion
+        this_quote['tags'] = tags_for_the_quote(row.id)
+        result.append(this_quote)
+    return result
+
+#################################################
+
+def quotes_for_tag(tag):
+    result = []
+    print(f'getting quotes for {tag}')
+
+    query = text('''select q.id, q.quote_text
+            from quotes q inner join tags t on q.id=t.quote_id
+            where t.tag ~* :tag ''')
+    quotes_result_set = engine.execute(query, {'tag': tag})
+    for row in quotes_result_set:
+        this_quote = {}
+        this_quote['text'] = row.quote_text
+        this_quote['tags'] = tags_for_the_quote(row.id)
+        result.append(this_quote)
+    return result
+
+#################################################
 
 @app.route("/quotes")
 def quotes():
@@ -75,9 +115,6 @@ def authors():
 
     result = {}
     #creating a sql query to retrieve the data
-    #result_details = engine.execute('''select name, born, birthplace, description
-    #from author''')
-    
     result_details = engine.execute('''select a.name, a.born, a.birthplace, a.description, count(q.author_name) from author a inner join quotes q on q.author_name = a.name
 group by a.name''')
     total_authors = result_details.rowcount
@@ -93,10 +130,10 @@ group by a.name''')
         # sel = text(f"select quote_text from quotes where author_name like '%{row.name}'")
         # quote_result = engine.execute(sel).fetchall()
         # quote_result = engine.execute(f"select quote_text from quotes where author_name like '\%%{row.name}\%%'")
-        query = text("select * from quotes where author_name = :name")
+        query = text("select * from quotes where author_name ~* :name")
         quotes_result = engine.execute(query, {'name': row.name})
         author_quotes=[]
-            for row in quotes_result:            
+        for row in quotes_result:            
             author_quotes.append(row.quote_text)
             #  quote['tags'] = tags
         author['quotes'] = (author_quotes)
@@ -106,7 +143,58 @@ group by a.name''')
     
     return jsonify(result)
 
-#Arun provided coded for top10 tags:
+
+@app.route("/authors/<author_name>")
+def oneauthor(author_name):
+    result = {}
+    query = text(
+        "select name , born , description from author where name ~* :name")
+    author_result = engine.execute(query, {'name': author_name})
+    # if we found the author, return the details, otherwise return Author not found
+    if(author_result.rowcount == 1):
+        author = author_result.fetchone()
+        result['name'] = author.name
+        result['description'] = author.description
+        # calll the quotes function within the loop
+        quotes = quotes_for_author(author_name)
+        result['quotes'] = quotes
+        result['number_of_quotes'] = len(quotes)
+    else:  # author not found
+        result['name'] = author_name
+        result['description'] = 'Author not found'
+
+    return jsonify(result)
+
+# get tags
+@app.route("/tags")
+def tags():
+    result = {}
+    tags_result_set = engine.execute('''select tag , count(*) as total from tags
+        group by tag
+        order by total desc''')
+    result['count'] = tags_result_set.rowcount
+    tags = []
+    for row in tags_result_set:
+        this_tag = {}
+        this_tag['name'] = row.tag
+        this_tag['number_of_quotes'] = row.total
+        this_tag['quotes'] = quotes_for_tag(row.tag)
+        tags.append(this_tag)
+    result['details'] = tags
+    return jsonify(result)
+
+# Get user requested tag
+@app.route("/tags/<tag_name>")
+def onetag(tag_name):
+    result = {}
+    result['tag'] = tag_name
+    quotes = quotes_for_tag(tag_name)
+    result['quotes'] = quotes
+    result['count'] = len(quotes)
+    return jsonify(result)
+
+    
+#Get top10 tags:
 @app.route("/top10tags")
 def top10tags():
     result = []
@@ -120,7 +208,6 @@ def top10tags():
         tag['total'] = row.total
         result.append(tag)
     return jsonify(result)
-
 
 if __name__ == '__main__':
     app.run()
